@@ -6,7 +6,7 @@ metadata:
 spec:
   project: homelab
   source:
-    repoURL: https://github.com/<GITHUB_USER>/webapp.git
+    repoURL: https://github.com/prakashk-dev/webapp.git
     targetRevision: main
     path: k8s                 # kustomize; ArgoCD auto-detects kustomization.yaml
   destination:
