@@ -1,0 +1,5 @@
+cloudflare_api_token  = "PASTE_SCOPED_TOKEN"
+cloudflare_account_id = "PASTE_ACCOUNT_ID"
+cloudflare_zone_id    = "PASTE_ZONE_ID"
+domain                = "pkandel.com"
+tunnel_secret         = "PASTE_BASE64_32BYTE_SECRET"   # openssl rand -base64 32

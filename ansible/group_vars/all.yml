@@ -1,0 +1,14 @@
+# ---- FILL THESE IN ----
+github_user: "prakashk-dev"
+domain: "pkandel.com"
+letsencrypt_email: "prakashk@outlook.com.au"
+timezone: "Australia/Melbourne"
+
+# Host networking (set at install; playbook re-asserts it)
+node_ip: "192.168.0.250"
+node_gateway: "192.168.5.1"
+node_interface: "enp3s0f0"   # confirm: ip -br link
+
+# Pinned versions
+k3s_version: "v1.31.4+k3s1"
+argocd_version: "v2.13.2"

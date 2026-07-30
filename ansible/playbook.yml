@@ -1,0 +1,80 @@
+---
+- hosts: node
+  become: true
+  vars_files:
+    - group_vars/all.yml
+  vars:
+    cert_manager_version: "v1.16.2"
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  tasks:
+    - name: Set timezone
+      command: "timedatectl set-timezone {{ timezone }}"
+      changed_when: false
+
+    - name: Free port 53 for Pi-hole (disable resolved stub listener)
+      copy:
+        dest: /etc/systemd/resolved.conf.d/99-nostub.conf
+        content: "[Resolve]\nDNSStubListener=no\n"
+      notify: restart resolved
+
+    - name: Reassert static IP via netplan (reproducible)
+      copy:
+        dest: /etc/netplan/99-static.yaml
+        mode: "0600"
+        content: |
+          network:
+            version: 2
+            ethernets:
+              {{ node_interface }}:
+                dhcp4: no
+                addresses: [{{ node_ip }}/24]
+                routes:
+                  - to: default
+                    via: {{ node_gateway }}
+                nameservers:
+                  addresses: [1.1.1.1, 8.8.8.8]
+      notify: apply netplan
+
+    - name: Intel Quick Sync (VA-API) drivers
+      apt:
+        name: [i965-va-driver, vainfo, intel-gpu-tools]
+        update_cache: true
+
+    - name: Install k3s (bundles Traefik, ServiceLB, local-path)
+      shell: |
+        curl -sfL https://get.k3s.io | \
+          INSTALL_K3S_VERSION={{ k3s_version }} sh -s - --write-kubeconfig-mode 644
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Install Helm
+      shell: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Install cert-manager (provides the CRDs cluster/cert-manager/ needs)
+      shell: |
+        helm repo add jetstack https://charts.jetstack.io --force-update
+        helm upgrade --install cert-manager jetstack/cert-manager \
+          -n cert-manager --create-namespace \
+          --version {{ cert_manager_version }} --set crds.enabled=true
+
+    - name: Install ArgoCD
+      shell: |
+        kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/{{ argocd_version }}/manifests/install.yaml
+
+    - name: Fetch kubeconfig to controller
+      fetch: { src: /etc/rancher/k3s/k3s.yaml, dest: ./kubeconfig, flat: true }
+
+    - name: Rewrite kubeconfig server address to node IP
+      delegate_to: localhost
+      become: false
+      replace: { path: ./kubeconfig, regexp: '127\.0\.0\.1', replace: "{{ node_ip }}" }
+
+  handlers:
+    - name: restart resolved
+      service: { name: systemd-resolved, state: restarted }
+    - name: apply netplan
+      command: netplan apply

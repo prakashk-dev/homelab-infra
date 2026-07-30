@@ -1,0 +1,9 @@
+*.dec.yaml
+secrets/*.plain.yaml
+ansible/kubeconfig
+terraform/**/.terraform/
+terraform/**/*.tfstate*
+terraform/**/terraform.tfvars
+.DS_Store
+
+secrets/.env
