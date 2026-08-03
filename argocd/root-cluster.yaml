@@ -6,7 +6,7 @@ metadata:
 spec:
   project: homelab
   source:
-    repoURL: https://github.com/<GITHUB_USER>/homelab-infra.git
+    repoURL: https://github.com/prakashk-dev/homelab-infra.git
     targetRevision: main
     path: cluster
     directory: { recurse: true }

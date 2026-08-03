@@ -12,6 +12,12 @@
       command: "timedatectl set-timezone {{ timezone }}"
       changed_when: false
 
+    - name: Ensure resolved.conf.d exists
+      file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: "0755"
+
     - name: Free port 53 for Pi-hole (disable resolved stub listener)
       copy:
         dest: /etc/systemd/resolved.conf.d/99-nostub.conf

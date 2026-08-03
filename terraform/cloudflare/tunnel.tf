@@ -11,7 +11,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "home" {
     dynamic "ingress_rule" {
       for_each = local.app_hostnames
       content {
-        hostname = "${ingress_rule.value}.${var.domain}"
+        hostname = ingress_rule.value == "@" ? var.domain : "${ingress_rule.value}.${var.domain}"
         service  = "http://traefik.kube-system:80"
       }
     }
